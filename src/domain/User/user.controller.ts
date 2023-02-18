@@ -16,6 +16,13 @@ class UserController {
     res.status(status).send(result);
   }
 
+  async LoginUser(req: Request, res: Response) {
+    const user: User = req.body;
+
+    const { status, result } = await UserService.LoginUser(user);
+    res.status(status).send({ result: result });
+  }
+
   async sendEmail(req: Request, res: Response) {
     const { email } = req.params;
 

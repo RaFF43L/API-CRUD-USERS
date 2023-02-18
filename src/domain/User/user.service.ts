@@ -2,7 +2,8 @@ import nodemailer from 'nodemailer';
 import { Types } from 'mongoose';
 import { SchemaUser } from './user.shema';
 import { User } from './user.model';
-import { genSaltSync, hashSync } from 'bcryptjs';
+import { genSaltSync, hashSync, compareSync } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 class UserService {
   async searchUser() {
@@ -28,6 +29,30 @@ class UserService {
         return { status: 400, result: 'Erro ao criar usuário' };
       });
   }
+
+  async LoginUser(user: User) {
+    return await SchemaUser.findOne({
+      email: user.email,
+    })
+      .then((dataValues) => {
+        const checkPassword = compareSync(user.password, dataValues.password);
+        if (checkPassword) {
+          const token = jwt.sign(
+            { id: dataValues._id, email: dataValues.email },
+            process.env.JWTSecret,
+            { expiresIn: '1h' },
+          );
+          return { status: 200, result: token };
+        } else {
+          return { status: 400, result: 'Senha incorreta!' };
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        return { status: 406, result: 'Usuário não encontrado!' };
+      });
+  }
+
   async sendEmail(email: string, id: Types.ObjectId | string) {
     const emailTransporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',

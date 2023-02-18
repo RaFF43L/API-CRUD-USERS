@@ -23,6 +23,7 @@
     "fs": "^0.0.1-security",
     "helmet": "^6.0.0",
     "joi-translation-pt-br": "^0.0.6",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.7.2",
     "morgan": "^1.10.0",
     "node-fetch": "2",
@@ -46,7 +47,6 @@
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-prettier": "^4.2.1",
-    "husky": "^8.0.2",
     "lint-staged": "^13.0.3",
     "prettier": "^2.7.1"
   }

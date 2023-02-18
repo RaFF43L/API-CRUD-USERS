@@ -33,4 +33,6 @@ routes.put(
 );
 routes.get('/search', UserController.searchUser);
 
+routes.post('/login', UserController.LoginUser);
+
 export { routes as UserRoutes };
