@@ -1,0 +1,5 @@
+test
+dist
+data
+.husky
+node_modules
