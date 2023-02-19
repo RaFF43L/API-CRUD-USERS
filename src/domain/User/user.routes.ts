@@ -19,7 +19,7 @@ routes.get(
   UserController.sendEmail,
 );
 routes.post(
-  '/createUser',
+  '/',
   celebrate({ [Segments.BODY]: bodySchemaUser }, { messages: messages }),
   UserController.createUser,
 );
@@ -31,7 +31,7 @@ routes.put(
   ),
   UserController.resetPassword,
 );
-routes.get('/search', UserController.searchUser);
+routes.get('/', UserController.searchUser);
 
 routes.post('/login', UserController.LoginUser);
 

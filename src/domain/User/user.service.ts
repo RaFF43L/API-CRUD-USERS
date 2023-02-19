@@ -2,19 +2,24 @@ import nodemailer from 'nodemailer';
 import { Types } from 'mongoose';
 import { SchemaUser } from './user.shema';
 import { User } from './user.model';
+import { HttpException } from '../../utils/httpException.util';
 import { genSaltSync, hashSync, compareSync } from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 class UserService {
   async searchUser() {
-    return await SchemaUser.find({})
+    const result = await SchemaUser.find({})
       .then((result) => {
         return { result: result, status: 200 };
       })
       .catch((error: Error) => {
         console.log(JSON.stringify(error));
-        return { result: 'Erro ao buscar email', status: 400 };
+        throw new HttpException(400, 'Erro ao buscar usuário');
       });
+    if (result.result.length === 0) {
+      throw new HttpException(406, 'Nenhum usuário encontrado');
+    }
+    return result;
   }
 
   async createUser(user: User) {
@@ -26,7 +31,7 @@ class UserService {
       })
       .catch((error: Error) => {
         console.log(JSON.stringify(error));
-        return { status: 400, result: 'Erro ao criar usuário' };
+        throw new HttpException(400, 'Erro ao criar usuário');
       });
   }
 
@@ -47,9 +52,9 @@ class UserService {
           return { status: 400, result: 'Senha incorreta!' };
         }
       })
-      .catch((e) => {
-        console.log(e);
-        return { status: 406, result: 'Usuário não encontrado!' };
+      .catch((error: Error) => {
+        console.log(JSON.stringify(error));
+        throw new HttpException(400, 'Usuário não encontrado!');
       });
   }
 
@@ -76,9 +81,9 @@ class UserService {
       .then(() => {
         return { status: 200, message: 'Email enviando com sucesso!' };
       })
-      .catch((error: Response) => {
+      .catch((error: Error) => {
         console.log(JSON.stringify(error));
-        return { status: 400, message: 'Falha ao enviar email!' };
+        throw new HttpException(400, 'Falha ao enviar email!');
       });
   }
 
@@ -91,24 +96,24 @@ class UserService {
       .then(() => {
         return { status: 200, message: 'Senha alterada com sucesso' };
       })
-      .catch((error) => {
+      .catch((error: Error) => {
         console.log(JSON.stringify(error));
-        return { status: 400, message: 'Erro ao alterar senha' };
+        throw new HttpException(400, 'Erro ao alterar senha');
       });
   }
 
   async searchEmail(email: string) {
-    return await SchemaUser.find({ email: email })
+    return await SchemaUser.findOne({ email: email })
       .then((result) => {
-        if (result.length === 0) {
-          return { result: 'Email não encontrado', isValid: false };
+        if (!result) {
+          throw new HttpException(406, 'Email não encontrado');
         } else {
-          return { result: result[0]._id, isValid: true };
+          return { result: result._id };
         }
       })
       .catch((error: Error) => {
         console.log(JSON.stringify(error));
-        return { result: 'Erro ao buscar email', isValid: false };
+        throw new HttpException(400, 'Erro ao buscar email');
       });
   }
 }

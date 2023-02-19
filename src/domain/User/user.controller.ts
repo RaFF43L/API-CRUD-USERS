@@ -2,50 +2,88 @@ import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { UserService } from './user.service';
 import { User } from './user.model';
+import { createClient } from 'redis';
 
 class UserController {
   async searchUser(req: Request, res: Response) {
-    const { status, result } = await UserService.searchUser();
-    res.status(status).send(result);
+    try {
+      const { status, result }: any = await UserService.searchUser();
+      res.status(status).send(result);
+    } catch (error) {
+      console.log(JSON.stringify(error));
+      res.status(error.status).send({ message: error.message });
+    }
   }
 
   async createUser(req: Request, res: Response) {
-    const user: User = req.body;
+    try {
+      const user: User = req.body;
 
-    const { status, result } = await UserService.createUser(user);
-    res.status(status).send(result);
+      const { status, result } = await UserService.createUser(user);
+      res.status(status).send(result);
+    } catch (error) {
+      console.log(JSON.stringify(error));
+      res.status(error.status).send({ message: error.message });
+    }
   }
 
   async LoginUser(req: Request, res: Response) {
-    const user: User = req.body;
+    const client = createClient();
+    client.connect();
 
-    const { status, result } = await UserService.LoginUser(user);
-    res.status(status).send({ result: result });
+    client.on('error', (error) => {
+      console.error('error Redis', error);
+    });
+
+    const result = await client.get('token');
+
+    if (result) {
+      res.status(200).send({ token: result });
+      await client.disconnect();
+      return;
+    }
+
+    try {
+      const user: User = req.body;
+
+      const { status, result } = await UserService.LoginUser(user);
+      await client.set('token', result, { EX: 60 * 60 });
+      res.status(status).send({ token: result });
+    } catch (error) {
+      console.log(JSON.stringify(error));
+      res.status(error.status).send({ message: error.message });
+    }
   }
 
   async sendEmail(req: Request, res: Response) {
-    const { email } = req.params;
+    try {
+      const { email } = req.params;
 
-    const { isValid, result } = await UserService.searchEmail(email);
+      const { result } = await UserService.searchEmail(email);
 
-    if (isValid) {
       const { status, message } = await UserService.sendEmail(email, result);
 
       res.status(status).send({ message: message });
-    } else {
-      res.status(406).send({ idValid: isValid, message: result });
+    } catch (error) {
+      console.log(JSON.stringify(error));
+      res.status(error.status).send({ message: error.message });
     }
   }
 
   async resetPassword(req: Request, res: Response) {
-    const { id } = req.params;
-    const { password } = req.body;
+    try {
+      const { id } = req.params;
+      const { password } = req.body;
 
-    const { status, message } = await UserService.resetPassword(
-      new Types.ObjectId(id),
-      password,
-    );
-    res.status(status).send(message);
+      const { status, message } = await UserService.resetPassword(
+        new Types.ObjectId(id),
+        password,
+      );
+      res.status(status).send(message);
+    } catch (error) {
+      console.log(JSON.stringify(error));
+      res.status(error.status).send({ message: error.message });
+    }
   }
 }
 
